@@ -6,7 +6,7 @@ import com.google.allenday.genomics.core.model.FileWrapper;
 import com.google.allenday.genomics.core.model.SampleMetaData;
 import com.google.allenday.genomics.core.model.SraSampleId;
 import com.google.allenday.genomics.core.parts_processing.PrepareDvNotProcessedFn;
-import com.google.allenday.genomics.core.parts_processing.StagingPaths;
+import com.google.allenday.genomics.core.parts_processing.StagingPathsBulder;
 import com.google.allenday.genomics.core.pipeline.GenomicsOptions;
 import com.google.allenday.genomics.core.pipeline.PipelineSetupUtils;
 import com.google.allenday.genomics.core.processing.dv.DeepVariantFn;
@@ -55,7 +55,7 @@ public class NanostreamBatchAppDV {
 
         final String stagedBucket = injector.getInstance(Key.get(String.class, Names.named("resultBucket")));
         final String outputDir = injector.getInstance(Key.get(String.class, Names.named("outputDir")));
-        StagingPaths stagingPaths = StagingPaths.init(outputDir + "staged/");
+        StagingPathsBulder stagingPathsBuilder = StagingPathsBulder.init(outputDir + "staged/");
 
         GenomicsOptions genomicsOptions = injector.getInstance(GenomicsOptions.class);
         List<String> geneReferences = genomicsOptions.getGeneReferences();
@@ -71,8 +71,7 @@ public class NanostreamBatchAppDV {
                 }))
                 .apply(GroupByKey.create())
                 .apply(ParDo.of(new PrepareDvNotProcessedFn(injector.getInstance(ReferencesProvider.class),
-                        geneReferences, 0, 200000, stagedBucket, stagingPaths.getMergedFilePattern(),
-                        stagingPaths.getIndexFilePattern(), stagingPaths.getVcfFilePattern())))
+                        geneReferences, 0, 200000, stagedBucket, stagingPathsBuilder)))
                 .apply(ParDo.of(injector.getInstance(DeepVariantFn.class)))
         ;
 

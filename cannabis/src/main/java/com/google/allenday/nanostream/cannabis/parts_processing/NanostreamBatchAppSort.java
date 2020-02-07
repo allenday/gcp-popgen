@@ -4,7 +4,7 @@ import com.google.allenday.genomics.core.batch.BatchProcessingPipelineOptions;
 import com.google.allenday.genomics.core.csv.ParseSourceCsvTransform;
 import com.google.allenday.genomics.core.io.FileUtils;
 import com.google.allenday.genomics.core.parts_processing.PrepareSortNotProcessedFn;
-import com.google.allenday.genomics.core.parts_processing.StagingPaths;
+import com.google.allenday.genomics.core.parts_processing.StagingPathsBulder;
 import com.google.allenday.genomics.core.pipeline.GenomicsOptions;
 import com.google.allenday.genomics.core.pipeline.PipelineSetupUtils;
 import com.google.allenday.genomics.core.processing.sam.SortFn;
@@ -43,7 +43,7 @@ public class NanostreamBatchAppSort {
         Pipeline pipeline = Pipeline.create(pipelineOptions);
         final String stagedBucket = injector.getInstance(Key.get(String.class, Names.named("resultBucket")));
         final String outputDir = injector.getInstance(Key.get(String.class, Names.named("outputDir")));
-        StagingPaths stagingPaths = StagingPaths.init(outputDir + "staged/");
+        StagingPathsBulder stagingPathsBuilder = StagingPathsBulder.init(outputDir + "staged/");
 
         GenomicsOptions genomicsOptions = injector.getInstance(GenomicsOptions.class);
         List<String> geneReferences = genomicsOptions.getGeneReferences();
@@ -52,12 +52,9 @@ public class NanostreamBatchAppSort {
 
         pipeline
                 .apply("Parse data", injector.getInstance(ParseSourceCsvTransform.class))
-                .apply(ParDo.of(new
-                        PrepareSortNotProcessedFn(fileUtils, geneReferences, stagedBucket,
-                        stagingPaths.getAlignedFilePattern(), stagingPaths.getSortedFilePattern())))
+                .apply(ParDo.of(new PrepareSortNotProcessedFn(fileUtils, geneReferences, stagedBucket, stagingPathsBuilder)))
                 .apply("Sort", ParDo.of(injector.getInstance(SortFn.class)))
         ;
-
 
         PipelineResult run = pipeline.run();
         if (pipelineOptions.getRunner().getName().equals(DirectRunner.class.getName())) {

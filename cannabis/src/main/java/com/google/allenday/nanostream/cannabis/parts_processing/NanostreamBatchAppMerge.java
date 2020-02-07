@@ -7,7 +7,7 @@ import com.google.allenday.genomics.core.model.FileWrapper;
 import com.google.allenday.genomics.core.model.SampleMetaData;
 import com.google.allenday.genomics.core.model.SraSampleId;
 import com.google.allenday.genomics.core.parts_processing.PrepareMergeNotProcessedFn;
-import com.google.allenday.genomics.core.parts_processing.StagingPaths;
+import com.google.allenday.genomics.core.parts_processing.StagingPathsBulder;
 import com.google.allenday.genomics.core.pipeline.GenomicsOptions;
 import com.google.allenday.genomics.core.pipeline.PipelineSetupUtils;
 import com.google.allenday.genomics.core.processing.sam.CreateBamIndexFn;
@@ -56,7 +56,7 @@ NanostreamBatchAppMerge {
         Pipeline pipeline = Pipeline.create(pipelineOptions);
         final String stagedBucket = injector.getInstance(Key.get(String.class, Names.named("resultBucket")));
         final String outputDir = injector.getInstance(Key.get(String.class, Names.named("outputDir")));
-        StagingPaths stagingPaths = StagingPaths.init(outputDir + "staged/");
+        StagingPathsBulder stagingPathsBuilder = StagingPathsBulder.init(outputDir + "staged/");
 
         GenomicsOptions genomicsOptions = injector.getInstance(GenomicsOptions.class);
         List<String> geneReferences = genomicsOptions.getGeneReferences();
@@ -75,7 +75,7 @@ NanostreamBatchAppMerge {
                 }))
                 .apply(GroupByKey.create())
                 .apply(ParDo.of(new PrepareMergeNotProcessedFn(fileUtils, geneReferences, stagedBucket,
-                        stagingPaths.getMergedFilePattern(), stagingPaths.getSortedFilePattern())))
+                        stagingPathsBuilder)))
                 .apply(ParDo.of(injector.getInstance(MergeFn.class)))
                 .apply(ParDo.of(injector.getInstance(CreateBamIndexFn.class)))
         ;

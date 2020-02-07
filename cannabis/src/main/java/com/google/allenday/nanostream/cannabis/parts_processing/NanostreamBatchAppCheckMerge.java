@@ -4,7 +4,7 @@ import com.google.allenday.genomics.core.batch.BatchProcessingPipelineOptions;
 import com.google.allenday.genomics.core.csv.ParseSourceCsvTransform;
 import com.google.allenday.genomics.core.io.FileUtils;
 import com.google.allenday.genomics.core.parts_processing.RemoveFailedMergeBamsFn;
-import com.google.allenday.genomics.core.parts_processing.StagingPaths;
+import com.google.allenday.genomics.core.parts_processing.StagingPathsBulder;
 import com.google.allenday.genomics.core.pipeline.GenomicsOptions;
 import com.google.allenday.genomics.core.pipeline.PipelineSetupUtils;
 import com.google.allenday.genomics.core.utils.NameProvider;
@@ -45,7 +45,7 @@ public class NanostreamBatchAppCheckMerge {
 
         final String stagedBucket = injector.getInstance(Key.get(String.class, Names.named("resultBucket")));
         final String outputDir = injector.getInstance(Key.get(String.class, Names.named("outputDir")));
-        StagingPaths stagingPaths = StagingPaths.init(outputDir + "staged/");
+        StagingPathsBulder stagingPathsBuilder = StagingPathsBulder.init(outputDir + "staged/");
 
         GenomicsOptions genomicsOptions = injector.getInstance(GenomicsOptions.class);
         List<String> geneReferences = genomicsOptions.getGeneReferences();
@@ -54,8 +54,7 @@ public class NanostreamBatchAppCheckMerge {
 
                 .apply("Parse data", injector.getInstance(ParseSourceCsvTransform.class))
                 .apply(ParDo.of(new RemoveFailedMergeBamsFn(injector.getInstance(FileUtils.class),
-                        geneReferences, stagedBucket, stagingPaths.getSortedFilePattern(),
-                        stagingPaths.getMergedFilePattern(), true)))
+                        geneReferences, stagedBucket, stagingPathsBuilder, true)))
                 .apply(ToString.elements());
 
         PipelineResult run = pipeline.run();

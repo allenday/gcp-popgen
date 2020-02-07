@@ -8,7 +8,7 @@ import com.google.allenday.genomics.core.model.FileWrapper;
 import com.google.allenday.genomics.core.model.SampleMetaData;
 import com.google.allenday.genomics.core.model.SraSampleId;
 import com.google.allenday.genomics.core.parts_processing.CheckExistenceFn;
-import com.google.allenday.genomics.core.parts_processing.StagingPaths;
+import com.google.allenday.genomics.core.parts_processing.StagingPathsBulder;
 import com.google.allenday.genomics.core.pipeline.GenomicsOptions;
 import com.google.allenday.genomics.core.pipeline.PipelineSetupUtils;
 import com.google.allenday.genomics.core.utils.NameProvider;
@@ -49,7 +49,7 @@ public class NanostreamBatchAppExistence {
 
         final String stagedBucket = injector.getInstance(Key.get(String.class, Names.named("resultBucket")));
         final String outputDir = injector.getInstance(Key.get(String.class, Names.named("outputDir")));
-        StagingPaths stagingPaths = StagingPaths.init(outputDir + "staged/");
+        StagingPathsBulder stagingPathsBuilder = StagingPathsBulder.init(outputDir + "staged/");
 
         GenomicsOptions genomicsOptions = injector.getInstance(GenomicsOptions.class);
         List<String> geneReferences = genomicsOptions.getGeneReferences();
@@ -67,9 +67,7 @@ public class NanostreamBatchAppExistence {
                 .apply(GroupByKey.create())
                 .apply(ParDo.of(new CheckExistenceFn(
                         injector.getInstance(FileUtils.class), injector.getInstance(IoUtils.class),
-                        geneReferences, stagedBucket, stagingPaths.getAlignedFilePattern(), stagingPaths.getSortedFilePattern(),
-                        stagingPaths.getMergedFilePattern(), stagingPaths.getIndexFilePattern(),
-                        stagingPaths.getVcfFilePattern(), stagingPaths.getVcfToBqProcessedListFile()
+                        geneReferences, stagedBucket, stagingPathsBuilder
                 )))
                 .apply(ToString.elements())
                 .apply(TextIO.write().withNumShards(1).to(String.format("gs://%s/%s", stagedBucket, outputDir + "existence_new.csv")))
