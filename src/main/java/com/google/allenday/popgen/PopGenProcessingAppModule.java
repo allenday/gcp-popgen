@@ -60,10 +60,4 @@ public class PopGenProcessingAppModule extends BatchProcessingModule {
     public UriProvider provideUriProvider() {
         return DefaultUriProvider.withDefaultProviderRule(srcBucket);
     }
-
-    @Provides
-    @Singleton
-    public AlignService.Instrument provideInstrument() {
-        return AlignService.Instrument.ILLUMINA;
-    }
 }

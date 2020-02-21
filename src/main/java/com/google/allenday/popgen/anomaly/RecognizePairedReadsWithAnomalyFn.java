@@ -4,6 +4,7 @@ import com.google.allenday.genomics.core.io.FileUtils;
 import com.google.allenday.genomics.core.io.GCSService;
 import com.google.allenday.genomics.core.model.FileWrapper;
 import com.google.allenday.genomics.core.model.SampleMetaData;
+import com.google.allenday.genomics.core.processing.align.AlignService;
 import com.google.cloud.storage.Blob;
 import com.google.cloud.storage.BlobId;
 import com.google.cloud.storage.BlobInfo;
@@ -12,10 +13,7 @@ import org.apache.beam.sdk.values.KV;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -51,6 +49,12 @@ public class RecognizePairedReadsWithAnomalyFn extends DoFn<KV<SampleMetaData, L
             LOG.info("Data error {}, {}", geneSampleMetaData, originalGeneDataList);
             return;
         }
+        if (Arrays.stream(AlignService.Instrument.values()).map(Enum::name).noneMatch(instrumentName -> instrumentName.equals(geneSampleMetaData.getPlatform()))) {
+            geneSampleMetaData.setComment(String.format("Unknown INSTRUMENT: %s", geneSampleMetaData.getPlatform()));
+            c.output(KV.of(geneSampleMetaData, Collections.emptyList()));
+            return;
+        }
+
         try {
             List<FileWrapper> checkedGeneDataList = new ArrayList<>();
             if (originalGeneDataList.size() > 0) {
