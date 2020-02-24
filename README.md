@@ -182,7 +182,3 @@ Optional: [DeepVariant](https://github.com/google/deepvariant) parameters:
         --max_non_premptible_tries=(number) \
         --deepVariantShards=(number) \
 ```
-```
- 
-
-
