@@ -66,20 +66,20 @@ As a result, `SRC_BUCKET_NAME` should has a following structure:
 + ${SRC_BUCKET_NAME}/
     + sra_csv/
         - reads.csv
-+ fastq/
-    + (sra_study_name_1)/
-        + (sra_sample_name_1)/
-            - (sra_run_1)_1.fastq
-            - (sra_run_1)_2.fastq
-            - (sra_run_2)_1.fastq
-            - (sra_run_2)_2.fastq
-            - (sra_run_3)_1.fastq
-            - ...
-        + ...
-    +...
-+ reference/
-    - REFERENCE_NAME
-    - REFERENCE_INDEX_NAME
+    + fastq/
+        + (sra_study_name_1)/
+            + (sra_sample_name_1)/
+                - (sra_run_1)_1.fastq
+                - (sra_run_1)_2.fastq
+                - (sra_run_2)_1.fastq
+                - (sra_run_2)_2.fastq
+                - (sra_run_3)_1.fastq
+                - ...
+            + ...
+        +...
+    + reference/
+        - REFERENCE_NAME
+        - REFERENCE_INDEX_NAME
 ```
 ### GCP settings
 1. Select Compute Engine region, e.g. `us-central1` (depends on your GCP quota availability)
