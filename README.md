@@ -5,7 +5,7 @@ This repository contains a number of Apache Beam pipeline configurations for pro
 The core pipeline itself is implemented in the [dataflow-genomics](https://github.com/allenday/dataflow-genomics) repository, and covers the "secondary" and "tertiary" portions of genome sequence analyses, i.e. the pipeline processes DNA [FASTQ](https://en.wikipedia.org/wiki/FASTQ_format) files through to [VCF](https://en.wikipedia.org/wiki/Variant_Call_Format) files against provided [FASTA](https://en.wikipedia.org/wiki/FASTA_format) references.
 
 Processing includes the following steps:
-1. Reading samples metadata from CSV files . See an example here: [example-metadata.csv](doc/example-metadata.csv). We're encoding metadata with SRA reads format. You can override this for your own sample metadata needs, see [XXX.java](XXX.java).
+1. Reading samples metadata from CSV files . See an example here: [example-metadata.csv](doc/example-metadata.csv). We're encoding metadata with SRA reads format. You can override this for your own sample metadata needs, see [com.google.allenday.genomics.core.model.SampleMetaData](https://github.com/allenday/dataflow-genomics/blob/master/core-components/src/main/java/com/google/allenday/genomics/core/model/SampleMetaData.java).
 2. Downloading *run* FASTQ files and FASTA *reference sequences*.
 3. Aligning FASTQ files and create SAM files.
 4. Merging, sorting, and indexing same-sample *run* SAM into sorted, merged BAM files.
