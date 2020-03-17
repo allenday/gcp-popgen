@@ -6,9 +6,11 @@ import com.google.allenday.genomics.core.model.SampleMetaData;
 import com.google.allenday.genomics.core.model.SraSampleId;
 import com.google.allenday.genomics.core.parts_processing.*;
 import com.google.allenday.genomics.core.pipeline.PipelineSetupUtils;
+import com.google.allenday.genomics.core.processing.align.AlignAndSortFn;
 import com.google.allenday.genomics.core.processing.align.AlignFn;
 import com.google.allenday.genomics.core.processing.dv.DeepVariantFn;
 import com.google.allenday.genomics.core.processing.sam.CreateBamIndexFn;
+import com.google.allenday.genomics.core.processing.sam.MergeAndIndexFn;
 import com.google.allenday.genomics.core.processing.sam.MergeFn;
 import com.google.allenday.genomics.core.processing.sam.SortFn;
 import com.google.allenday.genomics.core.utils.NameProvider;
@@ -31,12 +33,14 @@ import java.util.Objects;
 
 public class PopGenPostProcessingApp {
 
-    private final static String JOB_NAME_PREFIX = "pop-gen-finalise-%s--";
+    private final static String JOB_NAME_PREFIX = "pop-gen-%s--";
 
     public enum PostProcessingType {
         FINALIZE_ALIGN,
+        FINALIZE_ALIGN_AND_SORT,
         FINALIZE_SORT,
         FINALIZE_MERGE,
+        FINALIZE_MERGE_AND_INDEX,
         FINALIZE_INDEX,
         FINALIZE_DV,
         FINALIZE_VCF_TO_BQ,
@@ -74,6 +78,9 @@ public class PopGenPostProcessingApp {
             if (pipelineOptions.getPostProcessingType() == PostProcessingType.FINALIZE_ALIGN) {
                 parsedData.apply(ParDo.of(injector.getInstance(PrepareAlignNotProcessedFn.class)))
                         .apply("Align", ParDo.of(injector.getInstance(AlignFn.class)));
+            } else if (pipelineOptions.getPostProcessingType() == PostProcessingType.FINALIZE_ALIGN_AND_SORT) {
+                parsedData.apply(ParDo.of(injector.getInstance(PrepareAlignNotProcessedFn.class)))
+                        .apply("Align and Sort", ParDo.of(injector.getInstance(AlignAndSortFn.class)));
             } else if (pipelineOptions.getPostProcessingType() == PostProcessingType.FINALIZE_SORT) {
                 parsedData.apply(ParDo.of(injector.getInstance(PrepareSortNotProcessedFn.class)))
                         .apply("Sort", ParDo.of(injector.getInstance(SortFn.class)));
@@ -82,6 +89,11 @@ public class PopGenPostProcessingApp {
                         .apply(new GroupBySraSample())
                         .apply(ParDo.of(injector.getInstance(PrepareMergeNotProcessedFn.class)))
                         .apply("Merge", ParDo.of(injector.getInstance(MergeFn.class)));
+            } else if (pipelineOptions.getPostProcessingType() == PostProcessingType.FINALIZE_MERGE_AND_INDEX) {
+                parsedData
+                        .apply(new GroupBySraSample())
+                        .apply(ParDo.of(injector.getInstance(PrepareMergeNotProcessedFn.class)))
+                        .apply("Merge and Index", ParDo.of(injector.getInstance(MergeAndIndexFn.class)));
             } else if (pipelineOptions.getPostProcessingType() == PostProcessingType.FINALIZE_INDEX) {
                 parsedData
                         .apply(new GroupBySraSample())

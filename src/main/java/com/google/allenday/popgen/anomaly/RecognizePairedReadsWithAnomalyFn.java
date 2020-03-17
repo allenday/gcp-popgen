@@ -10,6 +10,7 @@ import com.google.cloud.storage.BlobId;
 import com.google.cloud.storage.BlobInfo;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.values.KV;
+import org.javatuples.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,6 +26,10 @@ public class RecognizePairedReadsWithAnomalyFn extends DoFn<KV<SampleMetaData, L
     private GCSService gcsService;
     private FileUtils fileUtils;
     private final boolean tryToFindWithSuffixMistake;
+
+    public RecognizePairedReadsWithAnomalyFn(String stagedBucket, FileUtils fileUtils) {
+        this(stagedBucket, fileUtils, false);
+    }
 
     public RecognizePairedReadsWithAnomalyFn(String stagedBucket, FileUtils fileUtils, boolean tryToFindWithSuffixMistake) {
         this.srcBucket = stagedBucket;
@@ -65,23 +70,41 @@ public class RecognizePairedReadsWithAnomalyFn extends DoFn<KV<SampleMetaData, L
                         .map(BlobId::getName)
                         .map(blobName -> fileUtils.getDirFromPath(blobName))
                         .ifPresent(dirPrefix -> {
-                            List<Blob> blobs = StreamSupport.stream(gcsService.getListOfBlobsInDir(srcBucket, dirPrefix).iterateAll()
-                                    .spliterator(), false).collect(Collectors.toList());
+                            String filesNameBaseToSearch = dirPrefix + geneSampleMetaData.getRunId();
 
-                            boolean hasAnomalyIndexSuffix = searchForAnomalySuffix(blobs);
-                            if (hasAnomalyIndexSuffix) {
-                                geneSampleMetaData.setComment("There are to much reads in dir");
-                                logAnomaly(blobs, geneSampleMetaData);
+                            List<Blob> blobs = StreamSupport
+                                    .stream(gcsService.getListOfBlobsInDir(srcBucket, filesNameBaseToSearch).iterateAll()
+                                            .spliterator(), false).collect(Collectors.toList());
+
+                            if (blobs.size() != originalGeneDataList.size()) {
+                                if (tryToFindWithSuffixMistake && blobs.size() == 1 && originalGeneDataList.size() == 2) {
+                                    List<Blob> blobsToSearch = StreamSupport.stream(gcsService.getListOfBlobsInDir(srcBucket, dirPrefix).iterateAll()
+                                            .spliterator(), false).collect(Collectors.toList());
+
+                                    originalGeneDataList
+                                            .forEach(fileWrapper -> {
+                                                boolean runBlobExists = gcsService.isExists(gcsService.getBlobIdFromUri(fileWrapper.getBlobUri()));
+                                                if (runBlobExists) {
+                                                    checkedGeneDataList.add(fileWrapper);
+                                                } else {
+                                                    searchWithSuffixMistake(geneSampleMetaData, fileWrapper, blobsToSearch, checkedGeneDataList);
+                                                }
+                                            });
+                                } else {
+                                    geneSampleMetaData.setComment("There are to much reads for runId");
+                                    logAnomaly(blobs, geneSampleMetaData);
+                                }
                             } else {
-                                originalGeneDataList
-                                        .forEach(fileWrapper -> {
-                                            boolean runBlobExists = gcsService.isExists(gcsService.getBlobIdFromUri(fileWrapper.getBlobUri()));
-                                            if (runBlobExists) {
-                                                checkedGeneDataList.add(fileWrapper);
-                                            } else if (tryToFindWithSuffixMistake) {
-                                                searchWithSuffixMistake(geneSampleMetaData, fileWrapper, blobs, checkedGeneDataList);
-                                            }
-                                        });
+                                List<FileWrapper> fileWrappers = blobs.stream().map(blob -> {
+                                    String uriFromBlob = gcsService.getUriFromBlob(blob.getBlobId());
+                                    String name = fileUtils.getFilenameFromPath(uriFromBlob);
+                                    FileWrapper fileWrapper = FileWrapper.fromBlobUri(uriFromBlob, name);
+
+                                    String[] parts = name.split("_");
+                                    int suffix = Integer.parseInt(parts[parts.length - 1].split("\\.")[0]);
+                                    return Pair.with(fileWrapper, suffix);
+                                }).sorted(Comparator.comparing(Pair::getValue1)).map(Pair::getValue0).collect(Collectors.toList());
+                                checkedGeneDataList.addAll(fileWrappers);
                             }
                             if (originalGeneDataList.size() == checkedGeneDataList.size()) {
                                 c.output(KV.of(geneSampleMetaData, checkedGeneDataList));
@@ -94,13 +117,6 @@ public class RecognizePairedReadsWithAnomalyFn extends DoFn<KV<SampleMetaData, L
         } catch (Exception e) {
             e.printStackTrace();
         }
-    }
-
-    private boolean searchForAnomalySuffix(List<Blob> blobs) {
-        return blobs.stream().map(b -> {
-            String[] parts = b.getName().split("_");
-            return Integer.parseInt(parts[parts.length - 1].split("\\.")[0]);
-        }).anyMatch(i -> i > 2);
     }
 
     private void searchWithSuffixMistake(SampleMetaData geneSampleMetaData, FileWrapper fileWrapper,

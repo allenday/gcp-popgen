@@ -44,7 +44,7 @@ public class PopGenProcessingAppModule extends BatchProcessingModule {
     @Provides
     @Singleton
     public RecognizePairedReadsWithAnomalyFn provideRecognizePairedReadsWithAnomalyFn(FileUtils fileUtils) {
-        return new RecognizePairedReadsWithAnomalyFn(srcBucket, fileUtils, true);
+        return new RecognizePairedReadsWithAnomalyFn(srcBucket, fileUtils);
     }
 
     @Provides
