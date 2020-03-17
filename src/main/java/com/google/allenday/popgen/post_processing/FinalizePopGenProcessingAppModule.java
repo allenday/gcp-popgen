@@ -4,7 +4,7 @@ import com.google.allenday.genomics.core.io.FileUtils;
 import com.google.allenday.genomics.core.io.IoUtils;
 import com.google.allenday.genomics.core.parts_processing.*;
 import com.google.allenday.genomics.core.processing.vcf_to_bq.VcfToBqFn;
-import com.google.allenday.genomics.core.reference.ReferencesProvider;
+import com.google.allenday.genomics.core.reference.ReferenceProvider;
 import com.google.allenday.genomics.core.utils.NameProvider;
 import com.google.allenday.popgen.PopGenProcessingAppModule;
 import com.google.inject.Provides;
@@ -63,33 +63,37 @@ public class FinalizePopGenProcessingAppModule extends PopGenProcessingAppModule
     @Provides
     @Singleton
     public PrepareAlignNotProcessedFn providePrepareAlignNotProcessedFn(FileUtils fileUtils, StagingPathsBulder stagingPathsBulder) {
-        return new PrepareAlignNotProcessedFn(fileUtils, genomicsOptions.getGeneReferences(), stagingPathsBulder);
+        return new PrepareAlignNotProcessedFn(fileUtils, genomicsOptions.getGeneReferences(), stagingPathsBulder,
+                genomicsOptions.getAllReferencesDirGcsUri());
     }
 
     @Provides
     @Singleton
     public PrepareSortNotProcessedFn providePrepareSortNotProcessedFn(FileUtils fileUtils, StagingPathsBulder stagingPathsBulder) {
-        return new PrepareSortNotProcessedFn(fileUtils, genomicsOptions.getGeneReferences(), stagingPathsBulder);
+        return new PrepareSortNotProcessedFn(fileUtils, genomicsOptions.getGeneReferences(), stagingPathsBulder,
+                genomicsOptions.getAllReferencesDirGcsUri());
     }
 
     @Provides
     @Singleton
     public PrepareMergeNotProcessedFn providePrepareMergeNotProcessedFn(FileUtils fileUtils, StagingPathsBulder stagingPathsBulder) {
-        return new PrepareMergeNotProcessedFn(fileUtils, genomicsOptions.getGeneReferences(), stagingPathsBulder);
+        return new PrepareMergeNotProcessedFn(fileUtils, genomicsOptions.getGeneReferences(), stagingPathsBulder,
+                genomicsOptions.getAllReferencesDirGcsUri());
     }
 
     @Provides
     @Singleton
     public PrepareIndexNotProcessedFn providePrepareIndexNotProcessedFn(FileUtils fileUtils, StagingPathsBulder stagingPathsBulder) {
-        return new PrepareIndexNotProcessedFn(fileUtils, genomicsOptions.getGeneReferences(), stagingPathsBulder);
+        return new PrepareIndexNotProcessedFn(fileUtils, genomicsOptions.getGeneReferences(), stagingPathsBulder,
+                genomicsOptions.getAllReferencesDirGcsUri());
     }
 
     @Provides
     @Singleton
-    public PrepareDvNotProcessedFn providePrepareIndexNotProcessedFn(ReferencesProvider referencesProvider,
+    public PrepareDvNotProcessedFn providePrepareIndexNotProcessedFn(ReferenceProvider referencesProvider,
                                                                      FileUtils fileUtils, StagingPathsBulder stagingPathsBulder) {
-        return new PrepareDvNotProcessedFn(referencesProvider, genomicsOptions.getGeneReferences(), minDvFileSizeThreshold,
-                maxDvFileSizeThreshold, stagingPathsBulder);
+        return new PrepareDvNotProcessedFn(genomicsOptions.getGeneReferences(), minDvFileSizeThreshold,
+                maxDvFileSizeThreshold, stagingPathsBulder, genomicsOptions.getAllReferencesDirGcsUri());
     }
 
     @Provides
