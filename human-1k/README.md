@@ -3,7 +3,7 @@
 This document describes the full process of preparing data and *gcs-popgen* app for FASTQ->VCF processing of [1000 Genomes Project](https://www.internationalgenome.org/) human genome dataset
 
 ### CSV annotations 
-Current directory contains [CSV file](human-1k.csv) with dataset metadata that was built from NCBI [SRA Run selector](https://www.ncbi.nlm.nih.gov/Traces/study/). List of runs was taken from 1000 Genomes Project Phase 3 [sequence index file](http://ftp.1000genomes.ebi.ac.uk/vol1/ftp/phase3/20130502.phase3.sequence.index) 
+Current directory contains [CSV file](reads.csv) with dataset metadata that was built from NCBI [SRA Run selector](https://www.ncbi.nlm.nih.gov/Traces/study/). List of runs was taken from 1000 Genomes Project Phase 3 [sequence index file](http://ftp.1000genomes.ebi.ac.uk/vol1/ftp/phase3/20130502.phase3.sequence.index) 
 
 ### Preparing environment
 Following steps should be performed to prepare your GCP environment: 
@@ -31,13 +31,14 @@ Store project id into with following command:
 bq mk ${PROJECT_ID}:${BQ_DATASET}
 ```
 ### Retrieving source data
-1. Source FASTQ files with runs sequences should be retrieved from [NCBI SRA archive](https://www.ncbi.nlm.nih.gov/sra). Simplest way is to use [SRA Tools](https://github.com/ncbi/sra-tools) to retrieve all `runId` from [CSV file](human-1k.csv).
+1. Source FASTQ files with runs sequences should be retrieved from [NCBI SRA archive](https://www.ncbi.nlm.nih.gov/sra). Simplest way is to use [SRA Tools](https://github.com/ncbi/sra-tools) to retrieve all `runId` from [CSV file](reads.csv).
 Example of retrieving run FASTQ: 
     ```
     fastq-dump ${RUN_ID} --split-files --skip-technical 
     ```
     Also you can build [PubSub](https://cloud.google.com/pubsub) queue and parallelize FASTQ retrieving with [sra_publisher](../utilities/sra_publisher) and [sra_retriever](../utilities/sra_retriever) Python scripts
 
+You can test with already prepared NA12878 sample data (described in [Running example with NA12878](#Running example with NA12878))
 2. Reference gene DB (`.fasta` or `.fa`) should be retrieved from [Human Genome Resources at NCBI](https://www.ncbi.nlm.nih.gov/genome/guide/human/). 
 Here is [link](ftp://ftp.ncbi.nlm.nih.gov/refseq/H_sapiens/annotation/GRCh38_latest/refseq_identifiers/GRCh38_latest_genomic.fna.gz) to GRCh38 latest genome reference.
 Download reference from link, unzip it and store reference file name in `REFERENCE_NAME`
@@ -48,10 +49,10 @@ Download reference from link, unzip it and store reference file name in `REFEREN
     Store Reference index name in  `REFERENCE_INDEX_NAME`
     
 ### Data placement
-1. [CSV file](human-1k.csv) with dataset metadata should be uploaded to `gs://${SRC_BUCKET_NAME}/sra_csv/`. GCS uri stored into: `CSV_URI`
+1. [CSV file](reads.csv) with dataset metadata should be uploaded to `gs://${SRC_BUCKET_NAME}/sra_csv/`. GCS uri stored into: `CSV_URI`
 2. Source FASTQ files with runs sequences should be uploaded to `SRC_BUCKET_NAME` accordingly following pattern `gs://${SRC_BUCKET_NAME}/fastq/<SRA_Study>/<SRA_Sample>/<RUN_FASTQ>` where:
- - `<SRA_Study>` - SRA study name from [CSV file](human-1k.csv)
- - `<SRA_Sample>` - SRA sample name from [CSV file](human-1k.csv)
+ - `<SRA_Study>` - SRA study name from [CSV file](reads.csv)
+ - `<SRA_Sample>` - SRA sample name from [CSV file](reads.csv)
  - `<RUN_FASTQ>` - FASTQ file to upload
 3. Reference gene DB and index file should be uploaded to `gs://${SRC_BUCKET_NAME}/reference/`. GCS uris stored into: `REFERENCE_URI` and `REFERENCE_INDEX_URI`
 4. JSON string with reference data should be created for running pipeline : 
@@ -64,7 +65,7 @@ As a result, `SRC_BUCKET_NAME` should has a following structure:
 ```lang-none
 + ${SRC_BUCKET_NAME}/
     + sra_csv/
-        - human-1k.csv
+        - reads.csv
 + fastq/
     + (sra_study_name_1)/
         + (sra_sample_name_1)/
@@ -302,7 +303,7 @@ gs://human-1k-demo-na12878/fastq/
 ```
 That's why there is no need to retrieve data from NCBI SRA archive
 
-All steps that was described in main part of doc stay the same except step 1 and 2 from *Data placement* section:
+All steps that was described in main part of doc stay the same except step 1 and 2 from [Data placement](#Data placement) section:
 1. [CSV file with NA12878 samle data](human-1k-demo-na12878.csv) with dataset metadata should be uploaded to `gs://${SRC_BUCKET_NAME}/sra_csv/`. GCS uri stored into: `CSV_URI`
 2. Source FASTQ files with runs sequences should be uploaded to `SRC_BUCKET_NAME`. To do this simply copy entire `fastq` from demo bucket:
 ```bash
