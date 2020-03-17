@@ -14,12 +14,12 @@ Store project id into your shell session with the following command:
     ```
 2. Create a GCS bucket for source data:
      ```
-    SRC_BUCKET_NAME=${PROJECT_NAME}-src
+    SRC_BUCKET_NAME=${PROJECT_ID}-src
     gsutil mb gs://${SRC_BUCKET_NAME}/
     ```
 3. Create a GCS bucket for intermediate results:
     ```
-    WORKING_BUCKET_NAME=${PROJECT_NAME}-working
+    WORKING_BUCKET_NAME=${PROJECT_ID}-working
     gsutil mb gs://${WORKING_BUCKET_NAME}/
     ```
 4. Set GCS uri for intermediate results:
