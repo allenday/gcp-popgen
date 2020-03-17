@@ -1,10 +1,10 @@
 ## GCP-PopGen Processing Pipeline
 
-This repo contains a number of Apache Beam pipeline configurations for processing populations of genomes. Examples given are in the 1000s range of individuals, and internal tests indicate scaling to 10,000s should be ok.
+This repository contains a number of Apache Beam pipeline configurations for processing populations of genomes. Populations added to this repository are for 1000s of individuals. Internal tests indicate scaling to 10Ks of individuals should be ok.
 
-The core pipeline itself is implemented in the [dataflow-genomics](https://github.com/allenday/dataflow-genomics) repo, and covers the "secondary" and "tertiary" portions of genome sequence analyses, i.e. the processes DNA [FASTQ](https://en.wikipedia.org/wiki/FASTQ_format) files through to [VCF](https://en.wikipedia.org/wiki/Variant_Call_Format) files against provided [FASTA](https://en.wikipedia.org/wiki/FASTA_format) references.
+The core pipeline itself is implemented in the [dataflow-genomics](https://github.com/allenday/dataflow-genomics) repository, and covers the "secondary" and "tertiary" portions of genome sequence analyses, i.e. the pipeline processes DNA [FASTQ](https://en.wikipedia.org/wiki/FASTQ_format) files through to [VCF](https://en.wikipedia.org/wiki/Variant_Call_Format) files against provided [FASTA](https://en.wikipedia.org/wiki/FASTA_format) references.
 
-Processing includes next steps:
+Processing includes the following steps:
 1. Reading samples metadata from CSV files (we use the SRA reads format, for lack of a standard option).
 2. Downloading *run* FASTQ files and FASTA *reference sequences*.
 3. Aligning FASTQ files and create SAM files.
@@ -14,9 +14,9 @@ Processing includes next steps:
 
 ### PopGen projects
 You can find CSV files with *project-*, *sample-*, amd *run-* level metadata in the following project directories:
- - cannabis-3k
- - rice-3k
- - human-1k
+ - cannabis-3k - ~3000 _Cannabis sativa_ samples
+ - rice-3k - 3024 _Oryza sativa_ samples
+ - human-1k ~1000 _Homo sapiens_ samples
 
 ### SRA metadata example
 ```csv
