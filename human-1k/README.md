@@ -38,7 +38,7 @@ Example of retrieving run FASTQ:
     ```
     Also you can build [PubSub](https://cloud.google.com/pubsub) queue and parallelize FASTQ retrieving with [sra_publisher](../utilities/sra_publisher) and [sra_retriever](../utilities/sra_retriever) Python scripts
 
-You can test with already prepared NA12878 sample data (described in [Running example with NA12878](#Running example with NA12878))
+You can test this data processing with already prepared NA12878 sample data (described in [Running example with NA12878](#Running example with NA12878))
 2. Reference gene DB (`.fasta` or `.fa`) should be retrieved from [Human Genome Resources at NCBI](https://www.ncbi.nlm.nih.gov/genome/guide/human/). 
 Here is [link](ftp://ftp.ncbi.nlm.nih.gov/refseq/H_sapiens/annotation/GRCh38_latest/refseq_identifiers/GRCh38_latest_genomic.fna.gz) to GRCh38 latest genome reference.
 Download reference from link, unzip it and store reference file name in `REFERENCE_NAME`
