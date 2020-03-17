@@ -7,8 +7,8 @@ Current directory contains [CSV file](reads.csv) with dataset metadata that was 
 
 ### Preparing environment
 Following steps should be performed to prepare your GCP environment: 
-1. Make sure you created [Google Cloud Project](https://console.cloud.google.com) with  and bounded it to a payment account.
-Store project id into with following command: 
+1. Make sure you have created [Google Cloud Project](https://console.cloud.google.com) and linked it to a billing account.
+Store project id into your shell session with the following command: 
     ```
     PROJECT_ID=`gcloud config get-value project`
     ```
@@ -28,6 +28,7 @@ Store project id into with following command:
     ```
 5. Create a [BigQuery](https://cloud.google.com/bigquery) dataset with name `BQ_DATASET`:
 ```bash
+BQ_DATASET=popgen-data # customize dataset name
 bq mk ${PROJECT_ID}:${BQ_DATASET}
 ```
 ### Retrieving source data
@@ -37,7 +38,6 @@ Example of retrieving run FASTQ:
     fastq-dump ${RUN_ID} --split-files --skip-technical 
     ```
     Also you can build [PubSub](https://cloud.google.com/pubsub) queue and parallelize FASTQ retrieving with [sra_publisher](../utilities/sra_publisher) and [sra_retriever](../utilities/sra_retriever) Python scripts
-
 You can test this data processing with already prepared NA12878 sample data (described in [Running example with NA12878](#Running example with NA12878))
 2. Reference gene DB (`.fasta` or `.fa`) should be retrieved from [Human Genome Resources at NCBI](https://www.ncbi.nlm.nih.gov/genome/guide/human/). 
 Here is [link](ftp://ftp.ncbi.nlm.nih.gov/refseq/H_sapiens/annotation/GRCh38_latest/refseq_identifiers/GRCh38_latest_genomic.fna.gz) to GRCh38 latest genome reference.
