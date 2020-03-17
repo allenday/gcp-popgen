@@ -304,7 +304,12 @@ gs://human-1k-demo-na12878/fastq/
 That's why there is no need to retrieve data from NCBI SRA archive
 
 All steps that was described in main part of doc stay the same except step 1 and 2 from [Data placement](#data-placement) section:
-1. [CSV file with NA12878 samle data](human-1k-demo-na12878.csv) with dataset metadata should be uploaded to `gs://${SRC_BUCKET_NAME}/sra_csv/`. GCS uri stored into: `CSV_URI`
+1. [CSV file with NA12878 samle data](human-1k-demo-na12878.csv) with dataset metadata should be uploaded to `gs://${SRC_BUCKET_NAME}/sra_csv/`. GCS URI stored into: `CSV_URI`
+```
+wget https://raw.githubusercontent.com/allenday/gcp-popgen/master/human-1k/human-1k-demo-na12878.csv
+gsutil cp human-1k-demo-na12878.csv gs://${SRC_BUCKET_NAME}/sra_csv/
+CSV_URI=gs://${SRC_BUCKET_NAME}/sra_csv/human-1k-demo-na12878.csv
+```
 2. Source FASTQ files with runs sequences should be uploaded to `SRC_BUCKET_NAME`. To do this simply copy entire `fastq` from demo bucket:
 ```bash
 gsutil -u ${PROJECT_ID} cp -r gs://human-1k-demo-na12878/fastq/ gs://${SRC_BUCKET_NAME}/
