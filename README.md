@@ -5,7 +5,7 @@ This repository contains a number of Apache Beam pipeline configurations for pro
 The core pipeline itself is implemented in the [dataflow-genomics](https://github.com/allenday/dataflow-genomics) repository, and covers the "secondary" and "tertiary" portions of genome sequence analyses, i.e. the pipeline processes DNA [FASTQ](https://en.wikipedia.org/wiki/FASTQ_format) files through to [VCF](https://en.wikipedia.org/wiki/Variant_Call_Format) files against provided [FASTA](https://en.wikipedia.org/wiki/FASTA_format) references.
 
 Processing includes the following steps:
-1. Reading samples metadata from CSV files (we use the SRA reads format, for lack of a standard option).
+1. Reading samples metadata from CSV files (we use the SRA reads format, for lack of a standard option). See an example here: [example-metadata.csv](doc/example-metadata.csv)
 2. Downloading *run* FASTQ files and FASTA *reference sequences*.
 3. Aligning FASTQ files and create SAM files.
 4. Merging, sorting, and indexing same-sample *run* SAM into sorted, merged BAM files.
