@@ -1,24 +1,24 @@
 ## GCP-PopGen Processing Pipeline
 
-This module contains Apache Beam pipeline that processes Population Genetics datasets from [FASTQ](https://en.wikipedia.org/wiki/FASTQ_format) files to [VCF](https://en.wikipedia.org/wiki/Variant_Call_Format) files against provided [FASTA](https://en.wikipedia.org/wiki/FASTA_format) references.
-Processing includes next steps:
-1. Reading samples metadata from CSV files with SRA reads format
-2. Downloading runs FASTQ files and FASTA references
-3. Aligning FASTQ files and create SAM files
-4. Converting SAM into bianry format (BAM)
-5. Sorting BAM files content
-6. Merging runs from the same SRA samples
-7. Indexing samples BAM files
-8. Variant Calling with [Deep Variant](https://github.com/google/deepvariant)
-9. Exporting VCF files into big query with [gcp-variant-transforms](https://github.com/googlegenomics/gcp-variant-transforms)
+This repository contains a number of Apache Beam pipeline configurations for processing populations of genomes. Populations added to this repository are for 1000s of individuals. Internal tests indicate scaling to 10Ks of individuals should be ok.
+
+The core pipeline itself is implemented in the [dataflow-genomics](https://github.com/allenday/dataflow-genomics) repository, and covers the "secondary" and "tertiary" portions of genome sequence analyses, i.e. the pipeline processes DNA [FASTQ](https://en.wikipedia.org/wiki/FASTQ_format) files through to [VCF](https://en.wikipedia.org/wiki/Variant_Call_Format) files against provided [FASTA](https://en.wikipedia.org/wiki/FASTA_format) references.
+
+Processing includes the following steps:
+1. Reading samples metadata from CSV files . See an example here: [example-metadata.csv](doc/example-metadata.csv). We're encoding metadata with SRA reads format. You can override this for your own sample metadata needs, see [com.google.allenday.genomics.core.model.SampleMetaData](https://github.com/allenday/dataflow-genomics/blob/master/core-components/src/main/java/com/google/allenday/genomics/core/model/SampleMetaData.java).
+2. Downloading *run* FASTQ files and FASTA *reference sequences*.
+3. Aligning FASTQ files and create SAM files.
+4. Merging, sorting, and indexing same-sample *run* SAM into sorted, merged BAM files.
+5. Variant calling BAM files with [DeepVariant](https://github.com/google/deepvariant), producing VCF files.
+6. ETLing VCF files as BigQuery [variants schema](https://cloud.google.com/life-sciences/docs/how-tos/bigquery-variants-schema) using [gcp-variant-transforms](https://github.com/googlegenomics/gcp-variant-transforms).
 
 ### PopGen projects
-You can find CSV files with gene sample metadata in the following project directories:
- - cannabis-3k
- - rice-3k
- - human-1k
+You can find CSV files with *project-*, *sample-*, amd *run-* level metadata in the following project directories:
+ - cannabis-3k - ~3000 _Cannabis sativa_ samples
+ - rice-3k - 3024 _Oryza sativa_ samples
+ - human-1k ~1000 _Homo sapiens_ samples
 
-### SRA gene sample metadata content example
+### SRA metadata example
 ```csv
 Assay_Type	AvgSpotLen	BioSample	Center_Name	DATASTORE_provider	DATASTORE_region	Experiment	InsertSize	Instrument	LibraryLayout	LibrarySelection	LibrarySource	Library_Name	LoadDate	MBases	MBytes	Organism	Platform	ReleaseDate	Run	SRA_Sample	Sample_Name	cultivar	dev_stage	geo_loc_name	tissue	BioProject	BioSampleModel	Consent	DATASTORE_filetype	SRA_Study	age
 WGS	100	SAMN00738286	UNIVERSITY OF TORONTO	gs s3 sra-sos	gs.US s3.us-east-1 sra-sos.be-md sra-sos.st-va	SRX100361	0	Illumina HiSeq 2000	SINGLE	size fractionation	GENOMIC	CS-US_SIL-1	2012-01-21	5205	3505	Cannabis sativa	ILLUMINA	2011-10-12	SRR351492	SRS266493	CS-USO31-DNA	USO-31	missing	missing	young leaf	PRJNA73819	Plant	public	sra	SRP008673	missing
@@ -32,16 +32,16 @@ PROJECT_NAME=(specify_project_name)
 SRC_BUCKET_NAME=${PROJECT_NAME}-src
 WORKING_BUCKET_NAME=${PROJECT_NAME}-working
 ```
-Following steps should be performed before you can start data processing: 
+The following steps must be performed before you can start data processing: 
 1. Create `SRC_BUCKET_NAME` GCS bucket
 2. Create `WORKING_BUCKET_NAME` GCS bucket
-3. Annotation CSV should be uploaded to the `SRC_BUCKET_NAME`
-4. Source FASTQ files should be retrieved (e.g. from NCBI SRA archive) and uploaded to the `SRC_BUCKET_NAME`
-5. Reference gene DBs (`.fasta` or `.fa`) should be retrieved (e.g. from NCBI Assemple archive)
-6. Reference gene DBs should indexed. Could be used [SAM Tools utilities](http://samtools.sourceforge.net/)
-7. All reference files should be uploaded to the `SRC_BUCKET_NAME`. 
+3. Annotation CSV must be uploaded to the `SRC_BUCKET_NAME`
+4. Source FASTQ files must be retrieved (e.g. from NCBI SRA archive) and uploaded to the `SRC_BUCKET_NAME`
+5. Reference genomes (`.fasta` or `.fa`) must be retrieved (e.g. from NCBI Assemple archive)
+6. Reference genomes must indexed using [samtools](http://samtools.sourceforge.net/) and minimap.
+7. All reference genome files and indexes must be uploaded to the `SRC_BUCKET_NAME`. 
 
-As a result, `SRC_BUCKET` should have a flowing structure:  
+As a result, `SRC_BUCKET` will have the following structure:  
 ```lang-none
 + ${SRC_BUCKET_NAME}/
     + sra_csv/
@@ -62,7 +62,7 @@ As a result, `SRC_BUCKET` should have a flowing structure:
         - (reference_name).fa.fai
 ```
 
-Following files structure would be created in the `WORKING_BUCKET_NAME` GCS bucket after processing:
+And the following structure will be created in the `WORKING_BUCKET_NAME` GCS bucket after processing:
 ```lang-none
 + ${WORKING_BUCKET_NAME}/
     + processing_output/
@@ -126,11 +126,10 @@ java -cp target/gcp-popgen-0.0.2.jar \
 --exportVcfToBq=False
 ```
 
-
 ## Docs in general terms
 
 ### Running
-Use following commands to run processing:
+Use the following commands to process a dataset:
 
 ```
 mvn clean package
@@ -150,7 +149,7 @@ java -cp target/gcp-popgen-(current_version).jar \
         --referenceNamesList=(list_of_references_names_that will_be_used) \
         --allReferencesDirGcsUri=(gcs_uri_of_dir_with_references) \
 ```
-If VCF results should be exported to BigQuery you need to add following arguments:
+If VCF results should be exported to BigQuery, add following arguments:
 ```
         --exportVcfToBq=True \
         --vcfBqDatasetAndTablePattern=(bq_dataset_and_table_name_pattern)
@@ -162,7 +161,7 @@ Also could be added optional parameters:
         --memoryOutputLimit=(max_file_size_to_pass_internaly_between_transforms) \ # Set 0 to store all intermediante files in GCS \
 ```
 
-Optional [DeepVariant](https://github.com/google/deepvariant) parameters:
+Optional: [DeepVariant](https://github.com/google/deepvariant) parameters:
 
 ```
         --controlPipelineWorkerRegion=(region_of_deep_varint_control_pipeline) \
@@ -183,7 +182,3 @@ Optional [DeepVariant](https://github.com/google/deepvariant) parameters:
         --max_non_premptible_tries=(number) \
         --deepVariantShards=(number) \
 ```
-```
- 
-
-
