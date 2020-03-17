@@ -28,7 +28,7 @@ Store project id into your shell session with the following command:
     ```
 5. Create a [BigQuery](https://cloud.google.com/bigquery) dataset with name `BQ_DATASET`:
 ```bash
-BQ_DATASET=popgen-data # customize dataset name
+BQ_DATASET=popgen # customize dataset name
 bq mk ${PROJECT_ID}:${BQ_DATASET}
 ```
 ### Retrieving source data
