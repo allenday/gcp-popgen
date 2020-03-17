@@ -303,7 +303,7 @@ gs://human-1k-demo-na12878/fastq/
 ```
 That's why there is no need to retrieve data from NCBI SRA archive
 
-All steps that was described in main part of doc stay the same except step 1 and 2 from [Data placement](#Data placement) section:
+All steps that was described in main part of doc stay the same except step 1 and 2 from [Data placement](#data-placement) section:
 1. [CSV file with NA12878 samle data](human-1k-demo-na12878.csv) with dataset metadata should be uploaded to `gs://${SRC_BUCKET_NAME}/sra_csv/`. GCS uri stored into: `CSV_URI`
 2. Source FASTQ files with runs sequences should be uploaded to `SRC_BUCKET_NAME`. To do this simply copy entire `fastq` from demo bucket:
 ```bash
