@@ -7,19 +7,19 @@ Current directory contains [CSV file](reads.csv) with dataset metadata that was 
 
 ### Preparing environment
 Following steps should be performed to prepare your GCP environment: 
-1. Make sure you created [Google Cloud Project](https://console.cloud.google.com) with  and bounded it to a payment account.
-Store project id into with following command: 
+1. Make sure you have created [Google Cloud Project](https://console.cloud.google.com) and linked it to a billing account.
+Store project id into your shell session with the following command: 
     ```
     PROJECT_ID=`gcloud config get-value project`
     ```
 2. Create a GCS bucket for source data:
      ```
-    SRC_BUCKET_NAME=${PROJECT_NAME}-src
+    SRC_BUCKET_NAME=${PROJECT_ID}-src
     gsutil mb gs://${SRC_BUCKET_NAME}/
     ```
 3. Create a GCS bucket for intermediate results:
     ```
-    WORKING_BUCKET_NAME=${PROJECT_NAME}-working
+    WORKING_BUCKET_NAME=${PROJECT_ID}-working
     gsutil mb gs://${WORKING_BUCKET_NAME}/
     ```
 4. Set GCS uri for intermediate results:
@@ -28,6 +28,7 @@ Store project id into with following command:
     ```
 5. Create a [BigQuery](https://cloud.google.com/bigquery) dataset with name `BQ_DATASET`:
 ```bash
+BQ_DATASET=popgen # customize dataset name
 bq mk ${PROJECT_ID}:${BQ_DATASET}
 ```
 ### Retrieving source data
@@ -37,8 +38,7 @@ Example of retrieving run FASTQ:
     fastq-dump ${RUN_ID} --split-files --skip-technical 
     ```
     Also you can build [PubSub](https://cloud.google.com/pubsub) queue and parallelize FASTQ retrieving with [sra_publisher](../utilities/sra_publisher) and [sra_retriever](../utilities/sra_retriever) Python scripts
-
-You can test this data processing with already prepared NA12878 sample data (described in [Running example with NA12878](#Running example with NA12878))
+You can test this data processing with already prepared NA12878 sample data, see [Running example with NA12878](#running-example-with-na12878)
 2. Reference gene DB (`.fasta` or `.fa`) should be retrieved from [Human Genome Resources at NCBI](https://www.ncbi.nlm.nih.gov/genome/guide/human/). 
 Here is [link](ftp://ftp.ncbi.nlm.nih.gov/refseq/H_sapiens/annotation/GRCh38_latest/refseq_identifiers/GRCh38_latest_genomic.fna.gz) to GRCh38 latest genome reference.
 Download reference from link, unzip it and store reference file name in `REFERENCE_NAME`
@@ -66,20 +66,20 @@ As a result, `SRC_BUCKET_NAME` should has a following structure:
 + ${SRC_BUCKET_NAME}/
     + sra_csv/
         - reads.csv
-+ fastq/
-    + (sra_study_name_1)/
-        + (sra_sample_name_1)/
-            - (sra_run_1)_1.fastq
-            - (sra_run_1)_2.fastq
-            - (sra_run_2)_1.fastq
-            - (sra_run_2)_2.fastq
-            - (sra_run_3)_1.fastq
-            - ...
-        + ...
-    +...
-+ reference/
-    - REFERENCE_NAME
-    - REFERENCE_INDEX_NAME
+    + fastq/
+        + (sra_study_name_1)/
+            + (sra_sample_name_1)/
+                - (sra_run_1)_1.fastq
+                - (sra_run_1)_2.fastq
+                - (sra_run_2)_1.fastq
+                - (sra_run_2)_2.fastq
+                - (sra_run_3)_1.fastq
+                - ...
+            + ...
+        +...
+    + reference/
+        - REFERENCE_NAME
+        - REFERENCE_INDEX_NAME
 ```
 ### GCP settings
 1. Select Compute Engine region, e.g. `us-central1` (depends on your GCP quota availability)
@@ -303,8 +303,13 @@ gs://human-1k-demo-na12878/fastq/
 ```
 That's why there is no need to retrieve data from NCBI SRA archive
 
-All steps that was described in main part of doc stay the same except step 1 and 2 from [Data placement](#Data placement) section:
-1. [CSV file with NA12878 samle data](human-1k-demo-na12878.csv) with dataset metadata should be uploaded to `gs://${SRC_BUCKET_NAME}/sra_csv/`. GCS uri stored into: `CSV_URI`
+All steps that was described in main part of doc stay the same except step 1 and 2 from [Data placement](#data-placement) section:
+1. [CSV file with NA12878 samle data](human-1k-demo-na12878.csv) with dataset metadata should be uploaded to `gs://${SRC_BUCKET_NAME}/sra_csv/`. GCS URI stored into: `CSV_URI`
+```
+wget https://raw.githubusercontent.com/allenday/gcp-popgen/master/human-1k/human-1k-demo-na12878.csv
+gsutil cp human-1k-demo-na12878.csv gs://${SRC_BUCKET_NAME}/sra_csv/
+CSV_URI=gs://${SRC_BUCKET_NAME}/sra_csv/human-1k-demo-na12878.csv
+```
 2. Source FASTQ files with runs sequences should be uploaded to `SRC_BUCKET_NAME`. To do this simply copy entire `fastq` from demo bucket:
 ```bash
 gsutil -u ${PROJECT_ID} cp -r gs://human-1k-demo-na12878/fastq/ gs://${SRC_BUCKET_NAME}/
