@@ -58,7 +58,7 @@ Download reference from link, unzip it and store reference file name in `REFEREN
 4. JSON string with reference data should be created for running pipeline : 
 ```
 REFERENCE_SHORT_NAME=$(echo $REFERENCE_NAME| cut -f 1 -d '.')
-REFERENCE_DATA_JSON_STRING='[{"name":"$REFERENCE_SHORT_NAME", "fastaUri":"$REFERENCE_URI", "indexUri":"$REFERENCE_INDEX_URI"}]'
+REFERENCE_DATA_JSON_STRING="[{\"name\":\"$REFERENCE_SHORT_NAME\", \"fastaUri\":\"$REFERENCE_URI\", \"indexUri\":\"$REFERENCE_INDEX_URI\"}]"
 ```
 
 As a result, `SRC_BUCKET_NAME` should has a following structure:  
