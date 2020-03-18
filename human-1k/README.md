@@ -57,8 +57,8 @@ Download reference from link, unzip it and store reference file name in `REFEREN
 3. Reference gene DB and index file should be uploaded to `gs://${SRC_BUCKET_NAME}/reference/`. GCS uris stored into: `REFERENCE_URI` and `REFERENCE_INDEX_URI`
 4. JSON string with reference data should be created for running pipeline : 
 ```
-REFERENCE_SHORT_NAME=${echo $REFERENCE_NAME| cut -f 1 -d '.'}
-REFERENCE_DATA_JSON_STRING='[{"name":"$REFERENCE_SHORT_NAME", "fastaUri":"$REFERENCE_URI", "indexUri":"$REFERENCE_INDEX_URI"}]'
+REFERENCE_SHORT_NAME=$(echo $REFERENCE_NAME| cut -f 1 -d '.')
+REFERENCE_DATA_JSON_STRING='[{"name":"'$REFERENCE_SHORT_NAME'","fastaUri":"'$REFERENCE_URI'","indexUri":"'$REFERENCE_INDEX_URI'"}]'
 ```
 
 As a result, `SRC_BUCKET_NAME` should has a following structure:  
@@ -101,8 +101,8 @@ As a result, `SRC_BUCKET_NAME` should has a following structure:
    Recommended also to set initial number of workers equals to `MAX_WORKERS` to avoid slow starting.
 5. Set temp and staging location for Dataflow files:
     ```
-    TEMP_LOC=gs://${WORKING_BUCKET_NAME}]/dataflow/temp/
-    STAGING_LOC=gs://${WORKING_BUCKET_NAME}]/dataflow/staging/
+    TEMP_LOC=gs://${WORKING_BUCKET_NAME}/dataflow/temp/
+    STAGING_LOC=gs://${WORKING_BUCKET_NAME}/dataflow/staging/
     ```
 ### Running pipeline
 There are several processing mode in which the pipeline could be ran:
@@ -115,7 +115,7 @@ To run pipeline in `FASTQ => Merged BAM and its index` mode you should call from
 ```bash
 mvn clean package
 java -cp target/gcp-popgen-0.0.3.jar \
-    com.google.allenday.popgen.post_processing.PopGenPostProcessingApp \
+    com.google.allenday.popgen.PopGenProcessingApp \
         --project=$PROJECT_ID \
         --runner=DataflowRunner \
         --region=$REGION \
@@ -198,7 +198,7 @@ Here is a full command:
 ```bash
 mvn clean package
 java -cp target/gcp-popgen-0.0.3.jar \
-    com.google.allenday.popgen.post_processing.PopGenPostProcessingApp \
+    com.google.allenday.popgen.PopGenProcessingApp \
         --project=$PROJECT_ID \
         --runner=DataflowRunner \
         --region=$REGION \
@@ -242,7 +242,7 @@ Full command:
 ```bash
 mvn clean package
 java -cp target/gcp-popgen-0.0.3.jar \
-    com.google.allenday.popgen.post_processing.PopGenPostProcessingApp \
+    com.google.allenday.popgen.PopGenProcessingApp \
         --project=$PROJECT_ID \
         --runner=DataflowRunner \
         --region=$REGION \
