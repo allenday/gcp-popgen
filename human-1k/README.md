@@ -115,7 +115,7 @@ To run pipeline in `FASTQ => Merged BAM and its index` mode you should call from
 ```bash
 mvn clean package
 java -cp target/gcp-popgen-0.0.3.jar \
-    com.google.allenday.popgen.post_processing.PopGenPostProcessingApp \
+    com.google.allenday.popgen.PopGenProcessingApp \
         --project=$PROJECT_ID \
         --runner=DataflowRunner \
         --region=$REGION \
@@ -198,7 +198,7 @@ Here is a full command:
 ```bash
 mvn clean package
 java -cp target/gcp-popgen-0.0.3.jar \
-    com.google.allenday.popgen.post_processing.PopGenPostProcessingApp \
+    com.google.allenday.popgen.PopGenProcessingApp \
         --project=$PROJECT_ID \
         --runner=DataflowRunner \
         --region=$REGION \
@@ -242,7 +242,7 @@ Full command:
 ```bash
 mvn clean package
 java -cp target/gcp-popgen-0.0.3.jar \
-    com.google.allenday.popgen.post_processing.PopGenPostProcessingApp \
+    com.google.allenday.popgen.PopGenProcessingApp \
         --project=$PROJECT_ID \
         --runner=DataflowRunner \
         --region=$REGION \
