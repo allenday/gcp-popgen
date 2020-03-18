@@ -57,7 +57,7 @@ Download reference from link, unzip it and store reference file name in `REFEREN
 3. Reference gene DB and index file should be uploaded to `gs://${SRC_BUCKET_NAME}/reference/`. GCS uris stored into: `REFERENCE_URI` and `REFERENCE_INDEX_URI`
 4. JSON string with reference data should be created for running pipeline : 
 ```
-REFERENCE_SHORT_NAME=${echo $REFERENCE_NAME| cut -f 1 -d '.'}
+REFERENCE_SHORT_NAME=$(echo $REFERENCE_NAME| cut -f 1 -d '.')
 REFERENCE_DATA_JSON_STRING='[{"name":"$REFERENCE_SHORT_NAME", "fastaUri":"$REFERENCE_URI", "indexUri":"$REFERENCE_INDEX_URI"}]'
 ```
 
