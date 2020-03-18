@@ -58,7 +58,7 @@ Download reference from link, unzip it and store reference file name in `REFEREN
 4. JSON string with reference data should be created for running pipeline : 
 ```
 REFERENCE_SHORT_NAME=$(echo $REFERENCE_NAME| cut -f 1 -d '.')
-REFERENCE_DATA_JSON_STRING="[{\"name\":\"$REFERENCE_SHORT_NAME\", \"fastaUri\":\"$REFERENCE_URI\", \"indexUri\":\"$REFERENCE_INDEX_URI\"}]"
+REFERENCE_DATA_JSON_STRING='["name":"'$REFERENCE_SHORT_NAME'","fastaUri":"'$REFERENCE_URI'","indexUri":"'$REFERENCE_INDEX_URI'"]'
 ```
 
 As a result, `SRC_BUCKET_NAME` should has a following structure:  
@@ -101,8 +101,8 @@ As a result, `SRC_BUCKET_NAME` should has a following structure:
    Recommended also to set initial number of workers equals to `MAX_WORKERS` to avoid slow starting.
 5. Set temp and staging location for Dataflow files:
     ```
-    TEMP_LOC=gs://${WORKING_BUCKET_NAME}]/dataflow/temp/
-    STAGING_LOC=gs://${WORKING_BUCKET_NAME}]/dataflow/staging/
+    TEMP_LOC=gs://${WORKING_BUCKET_NAME}/dataflow/temp/
+    STAGING_LOC=gs://${WORKING_BUCKET_NAME}/dataflow/staging/
     ```
 ### Running pipeline
 There are several processing mode in which the pipeline could be ran:
