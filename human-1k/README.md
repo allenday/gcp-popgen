@@ -37,10 +37,12 @@ Example of retrieving run FASTQ:
     ```
     fastq-dump ${RUN_ID} --split-files --skip-technical 
     ```
-    Also you can build [PubSub](https://cloud.google.com/pubsub) queue and parallelize FASTQ retrieving with [sra_publisher](../utilities/sra_publisher) and [sra_retriever](../utilities/sra_retriever) Python scripts
-You can test this data processing with already prepared NA12878 sample data, see [Running example with NA12878](#running-example-with-na12878)
+    Also you can build [PubSub](https://cloud.google.com/pubsub) queue and parallelize FASTQ retrieving with [sra_publisher](../utilities/sra_publisher) and [sra_retriever](../utilities/sra_retriever) Python scripts.
+    Total size of dataset: **68723** runs, **375.56 TB** 
+    
+    You can test human genomes data processing with already prepared NA12878 sample data, see [Running example with NA12878](#running-example-with-na12878)
 2. Reference gene DB (`.fasta` or `.fa`) should be retrieved from [Human Genome Resources at NCBI](https://www.ncbi.nlm.nih.gov/genome/guide/human/). 
-Here is [link](ftp://ftp.ncbi.nlm.nih.gov/refseq/H_sapiens/annotation/GRCh38_latest/refseq_identifiers/GRCh38_latest_genomic.fna.gz) to GRCh38 latest genome reference.
+Here is [link](ftp://ftp.ncbi.nlm.nih.gov/refseq/H_sapiens/annotation/GRCh38_latest/refseq_identifiers/GRCh38_latest_genomic.fna.gz) to GRCh38 latest genome reference. Reference size - 3.09 GB.
 Download reference from link, unzip it and store reference file name in `REFERENCE_NAME`
 3. Reference gene DBs should be indexed. For indexing `.fasta` file Could be used [SAM Tools utilities](http://samtools.sourceforge.net/):
     ```
@@ -106,11 +108,11 @@ As a result, `SRC_BUCKET_NAME` should has a following structure:
     ```
 ### Running pipeline
 There are several processing mode in which the pipeline could be ran:
-1. FASTQ => Merged BAM and its index
-2. FASTQ => VCF
-3. FASTQ => BigQuery with VCF data
+1. FASTQ to Merged BAM and its index
+2. FASTQ to VCF
+3. FASTQ to BigQuery with VCF data
 
-##### FASTQ => Merged BAM and its index
+##### FASTQ to Merged BAM and its index
 To run pipeline in `FASTQ => Merged BAM and its index` mode you should call from project root:
 ```bash
 mvn clean package
@@ -136,7 +138,7 @@ If there is need to process some specific samles you should add:
 ```
         --sraSamplesToFilter="<comma_separated_SRA_Samples>"
 ```
-##### FASTQ => VCF
+##### FASTQ to VCF
 To run pipeline in this mode you should add Deep Variant settings parameters to previous command:
 
 1. Worker region for Life Sciences main pipeline. Could be the same as `REGION` depends on your GCP quota availability):
@@ -228,7 +230,7 @@ java -cp target/gcp-popgen-0.0.3.jar \
         --deepVariantShards=$M_E_SHARDS \
         --withExportVcfToBq=False
 ```
-##### FASTQ => BigQuery with VCF data
+##### FASTQ to BigQuery with VCF data
 To add export VCF files into [BigQuery](https://cloud.google.com/bigquery) following parameter should be added:
 ```
         --exportVcfToBq=True \
@@ -296,8 +298,10 @@ VCF results files will be stored in `gs://${WORKING_BUCKET_NAME}/processing_outp
 BigQuery VCF data will be stored in `${PROJECT_ID}:${BQ_DATASET}.GENOMICS_VARIATIONS_${REFERENCE_NAME}` table.
 
 ### Running example with NA12878
-There is possibility to test processing with smaller dataset. For this purpose we add smaller version of [CSV file with NA12878 samle data](human-1k-demo-na12878.csv). 
-Also, we prepare runs FASTQ files store in [Requester Pays GCS Bucket](https://cloud.google.com/storage/docs/using-requester-pays):
+There is possibility to test processing with smaller dataset. For this purpose we add smaller version of [CSV file with NA12878 sample data](human-1k-demo-na12878.csv). 
+This CSV file describes dataset of **98 runs** with total FASTQ size **72.2 GB**.
+
+We prepared runs FASTQ files stored in [Requester Pays GCS Bucket](https://cloud.google.com/storage/docs/using-requester-pays):
 ```bash
 gs://human-1k-demo-na12878/fastq/
 ```
@@ -305,14 +309,21 @@ That's why there is no need to retrieve data from NCBI SRA archive
 
 All steps that was described in main part of doc stay the same except step 1 and 2 from [Data placement](#data-placement) section:
 1. [CSV file with NA12878 samle data](human-1k-demo-na12878.csv) with dataset metadata should be uploaded to `gs://${SRC_BUCKET_NAME}/sra_csv/`. GCS URI stored into: `CSV_URI`
-```
-wget https://raw.githubusercontent.com/allenday/gcp-popgen/master/human-1k/human-1k-demo-na12878.csv
-gsutil cp human-1k-demo-na12878.csv gs://${SRC_BUCKET_NAME}/sra_csv/
-CSV_URI=gs://${SRC_BUCKET_NAME}/sra_csv/human-1k-demo-na12878.csv
-```
+    ```
+    wget https://raw.githubusercontent.com/allenday/gcp-popgen/master/human-1k/human-1k-demo-na12878.csv
+    gsutil cp human-1k-demo-na12878.csv gs://${SRC_BUCKET_NAME}/sra_csv/
+    CSV_URI=gs://${SRC_BUCKET_NAME}/sra_csv/human-1k-demo-na12878.csv
+    ```
 2. Source FASTQ files with runs sequences should be uploaded to `SRC_BUCKET_NAME`. To do this simply copy entire `fastq` from demo bucket:
-```bash
-gsutil -u ${PROJECT_ID} cp -r gs://human-1k-demo-na12878/fastq/ gs://${SRC_BUCKET_NAME}/
+    ```bash
+    gsutil -u ${PROJECT_ID} cp -r gs://human-1k-demo-na12878/fastq/ gs://${SRC_BUCKET_NAME}/
+    ```
+Suggested worker machines settings:
 ```
+MACHINE_TYPE=n1-highmem-16
+MAX_WORKERS=50
+DISK_SIZE=150
+```
+Other worker machines settings could be the same as was described in the [GCP settings](#gcp-settings) and [FASTQ to VCF](#fastq-to-vcf) sections
 
 
