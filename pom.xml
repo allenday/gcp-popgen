@@ -83,7 +83,7 @@
         <dependency>
             <groupId>com.google.allenday</groupId>
             <artifactId>genomics-dataflow-core</artifactId>
-            <version>0.0.5</version>
+            <version>0.0.17</version>
         </dependency>
         <!--output-->
         <dependency>
@@ -175,6 +175,18 @@
                         </configuration>
                     </execution>
                 </executions>
+                <configuration>
+                    <filters>
+                        <filter>
+                            <artifact>*:*</artifact>
+                            <excludes>
+                                <exclude>META-INF/*.SF</exclude>
+                                <exclude>META-INF/*.DSA</exclude>
+                                <exclude>META-INF/*.RSA</exclude>
+                            </excludes>
+                        </filter>
+                    </filters>
+                </configuration>
             </plugin>
         </plugins>
     </build>

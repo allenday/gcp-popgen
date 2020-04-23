@@ -29,4 +29,11 @@ public interface FinalizePopGenProcessingOptions extends BatchProcessingPipeline
     Integer getMaxDvFileSizeThreshold();
 
     void setMaxDvFileSizeThreshold(Integer value);
+
+
+    @Description("Size of Vcf to Bq batch export chunks")
+    @Default.Integer(50)
+    Integer getVcfToBqBatchSize();
+
+    void setVcfToBqBatchSize(Integer value);
 }

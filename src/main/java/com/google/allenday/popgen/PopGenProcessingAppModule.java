@@ -3,14 +3,13 @@ package com.google.allenday.popgen;
 import com.google.allenday.genomics.core.batch.BatchProcessingModule;
 import com.google.allenday.genomics.core.batch.BatchProcessingPipelineOptions;
 import com.google.allenday.genomics.core.batch.PreparingTransform;
+import com.google.allenday.genomics.core.io.BaseUriProvider;
+import com.google.allenday.genomics.core.io.DefaultBaseUriProvider;
 import com.google.allenday.genomics.core.io.FileUtils;
-import com.google.allenday.genomics.core.io.UriProvider;
-import com.google.allenday.genomics.core.pipeline.GenomicsOptions;
-import com.google.allenday.genomics.core.processing.align.AlignService;
+import com.google.allenday.genomics.core.pipeline.GenomicsProcessingParams;
 import com.google.allenday.genomics.core.utils.NameProvider;
 import com.google.allenday.popgen.anomaly.DetectAnomalyTransform;
 import com.google.allenday.popgen.anomaly.RecognizePairedReadsWithAnomalyFn;
-import com.google.allenday.popgen.io.DefaultUriProvider;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 
@@ -25,8 +24,14 @@ public class PopGenProcessingAppModule extends BatchProcessingModule {
                                      List<String> sraSamplesToSkip,
                                      String project,
                                      String region,
-                                     GenomicsOptions genomicsOptions) {
-        super(srcBucket, inputCsvUri, sraSamplesToFilter, sraSamplesToSkip, project, region, genomicsOptions);
+                                     GenomicsProcessingParams genomicsOptions,
+                                     Integer maxFastqSizeMB,
+                                     Integer maxFastqChunkSize,
+                                     Integer bamRegionSize,
+                                     boolean withFinalMerge) {
+        super(srcBucket, inputCsvUri, sraSamplesToFilter, sraSamplesToSkip, project, region,
+                genomicsOptions, maxFastqSizeMB, maxFastqChunkSize, bamRegionSize,
+                withFinalMerge);
     }
 
     public PopGenProcessingAppModule(BatchProcessingPipelineOptions batchProcessingPipelineOptions) {
@@ -37,7 +42,11 @@ public class PopGenProcessingAppModule extends BatchProcessingModule {
                 batchProcessingPipelineOptions.getSraSamplesToSkip(),
                 batchProcessingPipelineOptions.getProject(),
                 batchProcessingPipelineOptions.getRegion(),
-                GenomicsOptions.fromAlignerPipelineOptions(batchProcessingPipelineOptions)
+                GenomicsProcessingParams.fromAlignerPipelineOptions(batchProcessingPipelineOptions),
+                batchProcessingPipelineOptions.getMaxFastqSizeMB(),
+                batchProcessingPipelineOptions.getMaxFastqChunkSize(),
+                batchProcessingPipelineOptions.getBamRegionSize(),
+                batchProcessingPipelineOptions.getWithFinalMerge()
         );
     }
 
@@ -51,13 +60,14 @@ public class PopGenProcessingAppModule extends BatchProcessingModule {
     @Singleton
     public PreparingTransform provideGroupByPairedReadsAndFilter(RecognizePairedReadsWithAnomalyFn recognizePairedReadsWithAnomalyFn,
                                                                  NameProvider nameProvider) {
-        return new DetectAnomalyTransform("Filter anomaly and prepare for processing", genomicsOptions.getResultBucket(),
-                String.format(genomicsOptions.getAnomalyOutputDirPattern(), nameProvider.getCurrentTimeInDefaultFormat()), recognizePairedReadsWithAnomalyFn);
+        return new DetectAnomalyTransform("Filter anomaly and prepare for processing", genomicsParams.getResultBucket(),
+                String.format(genomicsParams.getAnomalyOutputDirPattern(), nameProvider.getCurrentTimeInDefaultFormat()),
+                recognizePairedReadsWithAnomalyFn);
     }
 
     @Provides
     @Singleton
-    public UriProvider provideUriProvider() {
-        return DefaultUriProvider.withDefaultProviderRule(srcBucket);
+    public BaseUriProvider provideUriProvider() {
+        return DefaultBaseUriProvider.withDefaultProviderRule(srcBucket);
     }
 }

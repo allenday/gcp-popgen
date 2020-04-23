@@ -16,20 +16,23 @@ public class FinalizePopGenProcessingAppModule extends PopGenProcessingAppModule
     private String stagedDir;
     private Integer minDvFileSizeThreshold;
     private Integer maxDvFileSizeThreshold;
+    private Integer vcfToBqBatchSize;
+
 
     public FinalizePopGenProcessingAppModule(FinalizePopGenProcessingOptions options) {
         super(options);
         this.stagedDir = options.getStagedSubdir();
         this.minDvFileSizeThreshold = options.getMinDvFileSizeThreshold();
         this.maxDvFileSizeThreshold = options.getMaxDvFileSizeThreshold();
+        this.vcfToBqBatchSize = options.getVcfToBqBatchSize();
     }
 
 
     @Provides
     @Singleton
     public StagingPathsBulder provideStagingPathsBulder() {
-        return StagingPathsBulder.init(genomicsOptions.getResultBucket(),
-                genomicsOptions.getBaseOutputDir() + stagedDir);
+        return StagingPathsBulder.init(genomicsParams.getResultBucket(),
+                genomicsParams.getBaseOutputDir() + stagedDir);
     }
 
     @Provides
@@ -49,56 +52,59 @@ public class FinalizePopGenProcessingAppModule extends PopGenProcessingAppModule
                                                                                     StagingPathsBulder stagingPathsBulder,
                                                                                     NameProvider nameProvider) {
         return new VcfToBqBatchTransform.PrepareVcfToBqBatchFn(fileUtils, ioUtils, stagingPathsBulder,
-                nameProvider.getCurrentTimeInDefaultFormat());
+                nameProvider.getCurrentTimeInDefaultFormat(),
+                String.format(genomicsParams.getVcfToBqOutputDirPattern(), nameProvider.getCurrentTimeInDefaultFormat()),
+                vcfToBqBatchSize);
     }
 
 
     @Provides
     @Singleton
     public VcfToBqBatchTransform.SaveVcfToBqResults provideSaveVcfToBqResults(IoUtils ioUtils,
-                                                                              StagingPathsBulder stagingPathsBulder) {
-        return new VcfToBqBatchTransform.SaveVcfToBqResults(stagingPathsBulder, ioUtils);
+                                                                              StagingPathsBulder stagingPathsBulder,
+                                                                              FileUtils fileUtils) {
+        return new VcfToBqBatchTransform.SaveVcfToBqResults(stagingPathsBulder, ioUtils, fileUtils);
     }
 
     @Provides
     @Singleton
     public PrepareAlignNotProcessedFn providePrepareAlignNotProcessedFn(FileUtils fileUtils, StagingPathsBulder stagingPathsBulder) {
-        return new PrepareAlignNotProcessedFn(fileUtils, genomicsOptions.getGeneReferences(), stagingPathsBulder,
-                genomicsOptions.getAllReferencesDirGcsUri());
+        return new PrepareAlignNotProcessedFn(fileUtils, genomicsParams.getGeneReferences(), stagingPathsBulder,
+                genomicsParams.getAllReferencesDirGcsUri());
     }
 
     @Provides
     @Singleton
     public PrepareSortNotProcessedFn providePrepareSortNotProcessedFn(FileUtils fileUtils, StagingPathsBulder stagingPathsBulder) {
-        return new PrepareSortNotProcessedFn(fileUtils, genomicsOptions.getGeneReferences(), stagingPathsBulder,
-                genomicsOptions.getAllReferencesDirGcsUri());
+        return new PrepareSortNotProcessedFn(fileUtils, genomicsParams.getGeneReferences(), stagingPathsBulder,
+                genomicsParams.getAllReferencesDirGcsUri());
     }
 
     @Provides
     @Singleton
     public PrepareMergeNotProcessedFn providePrepareMergeNotProcessedFn(FileUtils fileUtils, StagingPathsBulder stagingPathsBulder) {
-        return new PrepareMergeNotProcessedFn(fileUtils, genomicsOptions.getGeneReferences(), stagingPathsBulder,
-                genomicsOptions.getAllReferencesDirGcsUri());
+        return new PrepareMergeNotProcessedFn(fileUtils, genomicsParams.getGeneReferences(), stagingPathsBulder,
+                genomicsParams.getAllReferencesDirGcsUri());
     }
 
     @Provides
     @Singleton
     public PrepareIndexNotProcessedFn providePrepareIndexNotProcessedFn(FileUtils fileUtils, StagingPathsBulder stagingPathsBulder) {
-        return new PrepareIndexNotProcessedFn(fileUtils, genomicsOptions.getGeneReferences(), stagingPathsBulder,
-                genomicsOptions.getAllReferencesDirGcsUri());
+        return new PrepareIndexNotProcessedFn(fileUtils, genomicsParams.getGeneReferences(), stagingPathsBulder,
+                genomicsParams.getAllReferencesDirGcsUri());
     }
 
     @Provides
     @Singleton
     public PrepareDvNotProcessedFn providePrepareIndexNotProcessedFn(ReferenceProvider referencesProvider,
                                                                      FileUtils fileUtils, StagingPathsBulder stagingPathsBulder) {
-        return new PrepareDvNotProcessedFn(genomicsOptions.getGeneReferences(), minDvFileSizeThreshold,
-                maxDvFileSizeThreshold, stagingPathsBulder, genomicsOptions.getAllReferencesDirGcsUri());
+        return new PrepareDvNotProcessedFn(genomicsParams.getGeneReferences(), minDvFileSizeThreshold,
+                maxDvFileSizeThreshold, stagingPathsBulder, genomicsParams.getAllReferencesDirGcsUri());
     }
 
     @Provides
     @Singleton
     public CheckExistenceFn provideCheckExistenceFn(FileUtils fileUtils, IoUtils ioUtils, StagingPathsBulder stagingPathsBulder) {
-        return new CheckExistenceFn(fileUtils, ioUtils, genomicsOptions.getGeneReferences(), stagingPathsBulder);
+        return new CheckExistenceFn(fileUtils, ioUtils, genomicsParams.getGeneReferences(), stagingPathsBulder);
     }
 }
