@@ -3,8 +3,8 @@ package com.google.allenday.popgen.anomaly;
 import com.google.allenday.genomics.core.io.FileUtils;
 import com.google.allenday.genomics.core.io.GCSService;
 import com.google.allenday.genomics.core.model.FileWrapper;
+import com.google.allenday.genomics.core.model.Instrument;
 import com.google.allenday.genomics.core.model.SampleMetaData;
-import com.google.allenday.genomics.core.processing.align.AlignService;
 import com.google.cloud.storage.Blob;
 import com.google.cloud.storage.BlobId;
 import com.google.cloud.storage.BlobInfo;
@@ -54,7 +54,7 @@ public class RecognizePairedReadsWithAnomalyFn extends DoFn<KV<SampleMetaData, L
             LOG.info("Data error {}, {}", geneSampleMetaData, originalGeneDataList);
             return;
         }
-        if (Arrays.stream(AlignService.Instrument.values()).map(Enum::name).noneMatch(instrumentName -> instrumentName.equals(geneSampleMetaData.getPlatform()))) {
+        if (Arrays.stream(Instrument.values()).map(Enum::name).noneMatch(instrumentName -> instrumentName.equals(geneSampleMetaData.getPlatform()))) {
             geneSampleMetaData.setComment(String.format("Unknown INSTRUMENT: %s", geneSampleMetaData.getPlatform()));
             c.output(KV.of(geneSampleMetaData, Collections.emptyList()));
             return;
@@ -73,12 +73,12 @@ public class RecognizePairedReadsWithAnomalyFn extends DoFn<KV<SampleMetaData, L
                             String filesNameBaseToSearch = dirPrefix + geneSampleMetaData.getRunId();
 
                             List<Blob> blobs = StreamSupport
-                                    .stream(gcsService.getListOfBlobsInDir(srcBucket, filesNameBaseToSearch).iterateAll()
+                                    .stream(gcsService.getBlobsWithPrefix(srcBucket, filesNameBaseToSearch)
                                             .spliterator(), false).collect(Collectors.toList());
 
                             if (blobs.size() != originalGeneDataList.size()) {
                                 if (tryToFindWithSuffixMistake && blobs.size() == 1 && originalGeneDataList.size() == 2) {
-                                    List<Blob> blobsToSearch = StreamSupport.stream(gcsService.getListOfBlobsInDir(srcBucket, dirPrefix).iterateAll()
+                                    List<Blob> blobsToSearch = StreamSupport.stream(gcsService.getBlobsWithPrefix(srcBucket, dirPrefix)
                                             .spliterator(), false).collect(Collectors.toList());
 
                                     originalGeneDataList
@@ -91,7 +91,7 @@ public class RecognizePairedReadsWithAnomalyFn extends DoFn<KV<SampleMetaData, L
                                                 }
                                             });
                                 } else {
-                                    geneSampleMetaData.setComment("There are to much reads for runId");
+                                    geneSampleMetaData.setComment("Wrong files number for runId");
                                     logAnomaly(blobs, geneSampleMetaData);
                                 }
                             } else {
